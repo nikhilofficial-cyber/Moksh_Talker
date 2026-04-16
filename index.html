@@ -20,6 +20,267 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
+            position: relative;
+        }
+
+        .main>div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: calc(26vw + 12px);
+            /* margin: 26px; */
+        }
+
+        textarea {
+            padding: 6px;
+            width: 26vw;
+            margin: 26px;
+            box-sizing: border-box;
+            border: 2px solid white;
+            border-radius: 1vh;
+            resize: none;
+            color: lime;
+            background: black;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: lime;
+            box-shadow: 0px 0px 6px lime;
+        }
+
+        button {
+            padding: 6px;
+            margin: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            cursor: pointer;
+            border: 2px solid white;
+            border-radius: 1vh;
+            transition: background 0.6s ease;
+            text-align: center;
+            text-shadow: 0px 0px 6px white;
+        }
+
+        #send {
+            background-color: lime;
+        }
+
+        #spam {
+            background-color: red;
+        }
+
+        #stop {
+            background-color: yellow;
+        }
+
+
+        button:hover {
+            background: linear-gradient(90deg, transparent, rgba(232, 9, 9, 0.6), transparent) !important;
+            /* background: linear-gradient(90deg, currentColor, transparent) !important; */
+            color: rgb(18, 240, 81) !important;
+            text-shadow: 0px 0px 6px rgb(18, 240, 81) !important;
+            box-shadow: 0px 0px 16px lime !important;
+        }
+
+        #change-webhook-url {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 25%;
+            padding: 10px 6px 10px 6px;
+            min-width: max-content;
+            background: darkblue;
+            color:white;
+        }
+
+        #change-webhook-url:hover {
+            color : white !important;
+            background: darkred !important;
+            text-shadow: 0px 0px 6px darkblue !important;
+            box-shadow: 0px 0px 16px darkred !important;
+        }
+
+        @media (min-width : 1200px){
+            .main>div {
+                width: calc(50vw + 12px);
+            }
+
+            textarea {
+                width: 50vw;
+            }
+        }
+        @media (max-width : 1200px){
+            .main>div {
+                width: calc(70vw + 12px);
+            }
+
+            textarea {
+                width: 70vw;
+            }
+        }
+        @media (max-width : 600px){
+            .main>div {
+                width: calc(90vw + 12px);
+            }
+
+            textarea {
+                width: 90vw;
+            }
+        }
+
+    </style>
+</head>
+
+<body style="background:black;color:white;">
+    <div class="main">
+        <button id="change-webhook-url">Change Webhook URL</button>
+        <textarea type="text" placeholder="Enter The Data You Wanted to send in Discord... " rows="12"
+            id="text"></textarea>
+        <div>
+            <button id="send">Send</button>
+            <button id="spam">Send in Spam</button>
+        </div>
+
+        <div>
+            <button id="stop">Stop Toggling Background Colors</button>
+        </div>
+
+    </div>
+</body>
+
+<script>
+    let temp = localStorage.getItem("dc-webhook-url-talker") ? localStorage.getItem("dc-webhook-url-talker") : prompt("Enter Your Webhook URL in the Code to use this Tool...") ;
+    let backInterval;
+    let isInterval = true;
+    let send = document.querySelector("#send");
+    let spam = document.querySelector("#spam");
+    let stop = document.querySelector("#stop");
+    let text = document.querySelector("#text");
+    let update_url = document.querySelector("#change-webhook-url");
+    let Webhook_URL = temp ? temp.trim() : "";
+
+    if(Webhook_URL){
+        localStorage.setItem("dc-webhook-url-talker",Webhook_URL);
+    }
+
+    const random = () => {
+        let a = "0123456789ABCDEF";
+        let color = "#";
+
+        for (let i = 0; i < 6; i++) {
+            color += a[Math.floor(Math.random() * 16)];
+        }
+
+        return color;
+    }
+
+    function bgColor() {
+        backInterval = setInterval(() => {
+            document.body.style.background = `linear-gradient(90deg, ${random()}, ${random()})`;
+        }, 2600)
+    }
+
+    bgColor();
+
+    send.addEventListener("click", () => {
+        let data = text.value.trim();
+        if (data.length > 0) {
+            fetch(Webhook_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    content: data
+                })
+            })
+                .catch(err => {
+                    console.log("Error occured Try Again...");
+                })
+        }
+        text.value = "";
+    })
+
+    spam.addEventListener("click", () => {
+        let data = text.value.trim();
+        // let nm = Math.floor(Math.random() * 10 + 2);
+        let nm = 26;
+        console.log(nm)
+        if (data.length > 0) {
+
+            for (let i = 0; i < nm; i++) {
+                setTimeout(() => {
+                    fetch(Webhook_URL, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            content: data
+                        })
+                    })
+                        .then(res => {
+
+                        })
+                        .catch(err => {
+                            console.log("Error occured Try Again...");
+                        })
+                }, i * 500)
+
+            }
+        }
+
+        text.value = "";
+    })
+
+    stop.addEventListener("click", () => {
+        if (isInterval) {
+            clearInterval(backInterval);
+            stop.innerText = "Start Toggling Background Colors"
+        }
+        else {
+            bgColor();
+            stop.innerText = "Stop Toggling Background Colors"
+        }
+        isInterval = !isInterval ;
+    })
+
+    update_url.addEventListener( "click", () => {
+        let temp = prompt("Enter Your New Webhook URL to use this Tool...") ;
+        if( temp.trim() ){
+            Webhook_URL = temp.trim();
+            localStorage.setItem("dc-webhook-url-talker",Webhook_URL);
+        }
+    })
+
+
+</script>
+
+</html>
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moksh Talker</title>
+    <style>
+        *,
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            font-weight: bold;
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
         }
 
         .main>div {
@@ -223,4 +484,4 @@
 
 </script>
 
-</html>
+</html> -->
